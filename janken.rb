@@ -74,20 +74,13 @@ def judge_winner
   case result
   when '勝ち'
     @win_count += 1
-    reset_hands
   when '負け'
     @lose_count += 1
-    reset_hands
   when 'あいこ'
     return janken
   end
 
   puts "#{@win_count}勝#{@lose_count}敗"
-end
-
-def reset_hands
-  @user_hand = nil
-  @cpu_hand = nil
 end
   
 def show_janken_battle_result
