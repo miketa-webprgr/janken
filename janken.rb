@@ -1,93 +1,109 @@
+require 'byebug'
+
 GCP = { g: 'グー', c: 'チョキ', p: 'パー' }
-GCP_NUMBER = { 1 => :g, 2 => :c, 3 => :p }
-GCP_RESULT = { g: { g: 'あいこ', c: '勝ち', p: '負け' },
-               c: { g: '負け', c: 'あいこ', p: '勝ち' },
-               p: { g: '勝ち', c: '負け', p: 'あいこ' },
+GCP_RESULT = { easy: {
+                g: { g: 'あいこ', c: '勝ち', p: '負け' },
+                c: { g: '負け', c: 'あいこ', p: '勝ち' },
+                p: { g: '勝ち', c: '負け', p: 'あいこ' },
+               },
+               hard: {
+                g: { g: '負け', c: '勝ち', p: '負け' },
+                c: { g: '負け', c: '負け', p: '勝ち' },
+                p: { g: '勝ち', c: '負け', p: '負け' },
+               }
              }
+BATTLE_MODE = [:easy, :hard]
 
 def janken_battle
-  initialize_battle_count
-  initialize_win_and_lose_count
+  battle_mode = set_battle_mode
+  @battle_count = set_battle_count
+  @win_count = 0
+  @lose_count = 0
 
   while @win_count + @lose_count < @battle_count do
-    janken
+    janken(battle_mode)
   end
 
   show_janken_battle_result
 end
 
-def initialize_battle_count
-  ask_battle_count
+def set_battle_mode
+  puts "Easyモードにしますか、hardモードにしますか？（press easy or hard)"
+  battle_mode = gets.chomp.to_sym
 
-  until [1, 3, 5].include?(@battle_count) do
-    puts "\n1, 3, 5回勝負しか出来ません。。。"
-    ask_battle_count
+  unless BATTLE_MODE.include?(battle_mode)
+    puts "\neasyかhardを選択してください"
+    return set_battle_mode
   end
 
-  puts "#{@battle_count}本勝負を選びました"
+  puts "#{battle_mode.to_s}モードを選択しました"
+  puts "\n"
+  battle_mode
 end
 
-def ask_battle_count
+def set_battle_count
   puts "何本勝負？(press 1 or 3 or 5)"
-  @battle_count = gets.chomp.to_i
-end
+  battle_count = gets.chomp.to_i
 
-def initialize_win_and_lose_count
-  @win_count = 0
-  @lose_count = 0
-end
-
-def janken
-  store_user_hand
-  show_cpu_hand
-  show_user_hand
-  judge_winner
-end
-
-def store_user_hand
-  ask_janken_hand
-
-  until GCP.key?(@user_hand) do
-    puts "ふざけないでください！ 正しい値を入力してください！！！"
-    ask_janken_hand
+  unless [1, 3, 5].include?(battle_count)
+    puts "\n1, 3, 5回勝負しか出来ません。。。"
+    return set_battle_count
   end
+
+  puts "#{battle_count}本勝負を選びました"
+  puts "\n"
+  battle_count
 end
 
-def ask_janken_hand
-  puts "\nじゃんけん…(press g or c or p)"
-  @user_hand = gets.chomp.to_sym
+def janken(battle_mode)
+  @user_hand = set_user_hand
+  @cpu_hand = set_cpu_hand
+  judge_winner(battle_mode)
 end
 
-def show_cpu_hand
-  @cpu_hand = GCP_NUMBER[rand(1..3)]
-  puts "\nCPU...#{GCP[@cpu_hand]}"
+def set_user_hand
+  puts "じゃんけん…(press g or c or p)"
+  user_hand = gets.chomp.to_sym
+
+  until GCP.key?(user_hand) do
+    puts "\nふざけないでください！ 正しい値を入力してください！！！"
+    return set_user_hand
+  end
+
+  user_hand
 end
 
-def show_user_hand
+def set_cpu_hand
+  gcp_key = GCP.keys.sample
+
+  puts "\nCPU...#{GCP[gcp_key]}"
+  gcp_key
+end
+
+def judge_winner(battle_mode)
   puts "あなた...#{GCP[@user_hand]}"
-end
 
-def judge_winner 
-  result = GCP_RESULT[@user_hand][@cpu_hand]
+  result = GCP_RESULT[battle_mode][@user_hand][@cpu_hand]
   puts result + "!"
-  
+
   case result
   when '勝ち'
     @win_count += 1
   when '負け'
     @lose_count += 1
   when 'あいこ'
-    return janken
+    return janken(battle_mode)
   end
 
   puts "#{@win_count}勝#{@lose_count}敗"
+  puts "\n"
 end
-  
+
 def show_janken_battle_result
   result = (@win_count > @lose_count) ? "勝ち" : "負け"
 
-  puts "\n結果"
-  puts "#{@win_count}勝#{@lose_count}敗であなたの#{result}" 
+  puts "結果"
+  puts "#{@win_count}勝#{@lose_count}敗であなたの#{result}"
 end
 
 janken_battle
